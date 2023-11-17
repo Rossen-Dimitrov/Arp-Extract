@@ -25,3 +25,14 @@ def extract_ports_for_fw():
                     vmpchbi01.append(row[0])
                 elif row[4] == 'vr:vmpcsdcn01':
                     vmpcsdcn01.append(row[0])
+
+
+def create_new_worksheet(name, wb):
+    headings = ['Interface (including VLAN)', 'IP-Adress', 'MAC-Adress']
+    ws = wb.create_sheet(name)
+    ws.append(headings)
+
+
+def append_data_to_worksheet(data, worksheet_name, wb):
+    ws = wb[worksheet_name]
+    ws.append(data)

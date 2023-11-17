@@ -3,81 +3,100 @@ import openpyxl
 from ports_list import *
 from openpyxl import Workbook, load_workbook
 
-from extract_port_fn import extract_ports_for_fw
+from functions import extract_ports_for_fw, create_new_worksheet, append_data_to_worksheet
+
+wb = Workbook()
 
 
-def extract_ip_arp_for_each_fw():
+def palo_alto_extract():
     extract_ports_for_fw()
     pattern = r'\s+'
 
-    wb = Workbook()
-
     with open('Palo Arp.txt') as arp_file:
         arp = arp_file.readlines()
-        headings = ['Interface', 'IP', 'MAC ADDRESS']
 
         for line in arp:
             row = re.split(pattern, line)
             if row[0][:4] == 'ae1.':
+                if row[2] == '(incomplete)':
+                    continue
                 data = [row[0], row[1], row[2]]
 
                 if row[0] in internet_transfer:
-                    if not 'internet_transfer' in wb.sheetnames:
-                        ws = wb.create_sheet('internet_transfer')
-                        ws.append(headings)
-                    ws = wb["internet_transfer"]
-                    ws.append(data)
+                    if 'internet_transfer' not in wb.sheetnames:
+                        create_new_worksheet('internet_transfer', wb)
+                    append_data_to_worksheet(data, "internet_transfer", wb)
 
                 elif row[0] in infra:
-                    if not 'infra' in wb.sheetnames:
-                        ws = wb.create_sheet('infra')
-                        ws.append(headings)
-                    ws = wb["infra"]
-                    ws.append(data)
+                    if 'infra' not in wb.sheetnames:
+                        create_new_worksheet('infra', wb)
+                    append_data_to_worksheet(data, "infra", wb)
 
                 elif row[0] in msvx_nsx_t_dmz:
-                    if not 'msvx_nsx_t_dmz' in wb.sheetnames:
-                        ws = wb.create_sheet('msvx_nsx_t_dmz')
-                        ws.append(headings)
-                    ws = wb["msvx_nsx_t_dmz"]
-                    ws.append(data)
+                    if 'msvx_nsx_t_dmz' not in wb.sheetnames:
+                        create_new_worksheet('msvx_nsx_t_dmz', wb)
+                    append_data_to_worksheet(data, 'msvx_nsx_t_dmz', wb)
 
                 elif row[0] in msvx_nsx_t_default:
-                    if not 'msvx_nsx_t_default' in wb.sheetnames:
-                        ws = wb.create_sheet('msvx_nsx_t_default')
-                        ws.append(headings)
-                    ws = wb["msvx_nsx_t_default"]
-                    ws.append(data)
+                    if 'msvx_nsx_t_default' not in wb.sheetnames:
+                        create_new_worksheet('msvx_nsx_t_default', wb)
+                    append_data_to_worksheet(data, "msvx_nsx_t_default", wb)
 
                 elif row[0] in sap01:
-                    if not 'sap01' in wb.sheetnames:
-                        ws = wb.create_sheet('sap01')
-                        ws.append(headings)
-                    ws = wb["sap01"]
-                    ws.append(data)
+                    if 'sap01' not in wb.sheetnames:
+                        create_new_worksheet('sap01', wb)
+                    append_data_to_worksheet(data, "sap01", wb)
 
                 elif row[0] in deedvbasf005:
-                    if not 'deedvbasf005' in wb.sheetnames:
-                        ws = wb.create_sheet('deedvbasf005')
-                        ws.append(headings)
-                    ws = wb["deedvbasf005"]
-                    ws.append(data)
+                    if 'deedvbasf005' not in wb.sheetnames:
+                        create_new_worksheet('deedvbasf005', wb)
+                    append_data_to_worksheet(data, "deedvbasf005", wb)
 
                 elif row[0] in vmpchbi01:
-                    if not 'vmpchbi01' in wb.sheetnames:
-                        ws = wb.create_sheet('vmpchbi01')
-                        ws.append(headings)
-                    ws = wb["vmpchbi01"]
-                    ws.append(data)
+                    if 'vmpchbi01' not in wb.sheetnames:
+                        create_new_worksheet('vmpchbi01', wb)
+                    append_data_to_worksheet(data, "vmpchbi01", wb)
 
                 elif row[0] in vmpcsdcn01:
-                    if not 'vmpcsdcn01' in wb.sheetnames:
-                        ws = wb.create_sheet('vmpcsdcn01')
-                        ws.append(headings)
-                    ws = wb["vmpcsdcn01"]
-                    ws.append(data)
+                    if 'vmpcsdcn01' not in wb.sheetnames:
+                        create_new_worksheet('vmpcsdcn01', wb)
+                    append_data_to_worksheet(data, "vmpcsdcn01", wb)
 
-    wb.save('Firewall ARP Table.xlsx')
+    wb.save('Firewalls ARP Table.xlsx')
 
 
-extract_ip_arp_for_each_fw()
+def check_point_extract():
+    pattern = r'\s+'
+
+    with open('CHECKPOINT_ARP_INVENTORY.txt') as arp_file:
+        arp = arp_file.readlines()
+
+        for line in arp:
+            row = re.split(pattern, line)
+
+            data = [row[0]]
+
+            if row[0] == '?' and row[5] == 'on':
+                if row[3] == '<incomplete>':
+                    continue
+                data = [row[3], row[6], row[1][1:-1]]
+            elif row[0] == '?':
+                if row[3] == '<incomplete>':
+                    continue
+                data = [row[3], row[5], row[1][1:-1]]
+
+            if 'Check Point' not in wb.sheetnames:
+                create_new_worksheet('Check Point', wb)
+            append_data_to_worksheet(data, "Check Point", wb)
+
+    wb.save('Firewalls ARP Table.xlsx')
+
+
+palo_alto_extract()
+check_point_extract()
+
+
+
+
+
+
