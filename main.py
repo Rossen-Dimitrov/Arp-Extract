@@ -1,9 +1,10 @@
-import re
-import openpyxl
-from ports_list import *
-from openpyxl import Workbook, load_workbook
 
-from functions import extract_ports_for_fw, create_new_worksheet, append_data_to_worksheet
+import re, os
+from ports_list import *
+from openpyxl import Workbook
+
+from functions import extract_ports_for_fw, create_new_worksheet, append_data_to_worksheet, get_lb_name, \
+    validate_ip_address
 
 wb = Workbook()
 
@@ -92,11 +93,44 @@ def check_point_extract():
     wb.save('Firewalls ARP Table.xlsx')
 
 
-palo_alto_extract()
-check_point_extract()
+def lb_extract():
+    wb_lb = Workbook()
+    pattern = r'\s+'
+    lb_directory = "LB_Files"
+    for file in os.listdir(lb_directory):
+        if file.endswith('.txt'):
+            with open(os.path.join(lb_directory, file)) as f:
+                arp_file = f.readlines()
+                lb_name = get_lb_name(arp_file[0])
+                print(lb_name)
+                for line in arp_file:
+                    row = re.split(pattern, line)
+                    if len(row) > 2 and row[2] == 'incomplete':
+                        continue
+                    ip = row[0].split('%')
+                    if len(ip) == 2:
+                        ip, partition = ip[0], ip[1]
+                    else:
+                        ip = str(row[0])
+
+                    if not validate_ip_address(ip):
+                        continue
+                    vlan_row = row[4].split('-')
+                    print(vlan_row)
+
+                    # data = [row[3], row[6], row[1][1:-1]]
+            #         elif row[0] == '?':
+            #             if row[2] == '<incomplete>':
+            #                 continue
+            #             data = [row[3], row[5], row[1][1:-1]]
+            #
+            #         if 'Check Point' not in wb.sheetnames:
+            #             create_new_worksheet('Check Point', wb)
+            #         append_data_to_worksheet(data, "Check Point", wb)
+            #
+            # wb.save('Firewalls ARP Table.xlsx')
 
 
-
-
-
-
+# palo_alto_extract()
+# check_point_extract()
+lb_extract()

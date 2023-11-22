@@ -1,6 +1,6 @@
 from ports_list import *
 import re
-
+import ipaddress
 
 def extract_ports_for_fw():
     pattern = r'\s+'
@@ -27,12 +27,26 @@ def extract_ports_for_fw():
                     vmpcsdcn01.append(row[0])
 
 
-def create_new_worksheet(name, wb):
+def create_new_worksheet(name, wb) -> None:
     headings = ['Interface (including VLAN)', 'IP-Adress', 'MAC-Adress']
     ws = wb.create_sheet(name)
     ws.append(headings)
 
 
-def append_data_to_worksheet(data, worksheet_name, wb):
+def append_data_to_worksheet(data, worksheet_name, wb) -> None:
     ws = wb[worksheet_name]
     ws.append(data)
+
+
+def get_lb_name(first_row) -> str:
+    row = str(first_row)
+    return row.split('@(')[1].split(')')[0]
+
+
+def validate_ip_address(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+
+    except ValueError:
+        return False
