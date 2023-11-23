@@ -1,4 +1,3 @@
-
 import re, os
 from ports_list import *
 from openpyxl import Workbook
@@ -64,6 +63,7 @@ def palo_alto_extract():
                     append_data_to_worksheet(data, "vmpcsdcn01", wb)
 
     wb.save('Firewalls ARP Table.xlsx')
+    print(f"{'Firewalls'}: complete")
 
 
 def check_point_extract():
@@ -80,21 +80,21 @@ def check_point_extract():
             if row[0] == '?' and row[5] == 'on':
                 if row[3] == '<incomplete>':
                     continue
-                data = [row[3], row[6], row[1][1:-1]]
+                data = [row[6], row[1][1:-1], row[3]]
             elif row[0] == '?':
                 if row[3] == '<incomplete>':
                     continue
-                data = [row[3], row[5], row[1][1:-1]]
+                data = [row[5], row[1][1:-1], row[3]]
 
             if 'Check Point' not in wb.sheetnames:
                 create_new_worksheet('Check Point', wb)
             append_data_to_worksheet(data, "Check Point", wb)
 
     wb.save('Firewalls ARP Table.xlsx')
+    print("Check Point: complete")
 
 
 def lb_extract():
-    wb_lb = Workbook()
     pattern = r'\s+'
     lb_directory = "LB_Files"
     for file in os.listdir(lb_directory):
@@ -102,7 +102,7 @@ def lb_extract():
             with open(os.path.join(lb_directory, file)) as f:
                 arp_file = f.readlines()
                 lb_name = get_lb_name(arp_file[0])
-                print(lb_name)
+
                 for line in arp_file:
                     row = re.split(pattern, line)
                     if len(row) > 2 and row[2] == 'incomplete':
@@ -115,22 +115,18 @@ def lb_extract():
 
                     if not validate_ip_address(ip):
                         continue
-                    vlan_row = row[4].split('-')
-                    print(vlan_row)
+                    vlan = re.split('_|#', row[3])[-1]
+                    mac = row[2]
+                    data = [vlan, ip, mac]
 
-                    # data = [row[3], row[6], row[1][1:-1]]
-            #         elif row[0] == '?':
-            #             if row[2] == '<incomplete>':
-            #                 continue
-            #             data = [row[3], row[5], row[1][1:-1]]
-            #
-            #         if 'Check Point' not in wb.sheetnames:
-            #             create_new_worksheet('Check Point', wb)
-            #         append_data_to_worksheet(data, "Check Point", wb)
-            #
-            # wb.save('Firewalls ARP Table.xlsx')
+                    if lb_name not in wb.sheetnames:
+                        create_new_worksheet(lb_name, wb)
+                    append_data_to_worksheet(data, lb_name, wb)
+
+            wb.save('Firewalls_And_LB ARP Table.xlsx')
+            print(f"{lb_name}: complete")
 
 
-# palo_alto_extract()
-# check_point_extract()
+palo_alto_extract()
+check_point_extract()
 lb_extract()
